@@ -27,6 +27,16 @@
 #include <FIMU_ITG3200.h>
 #include <Wire.h>
 
+int Motor_E1 = 5; // digital pin 5 of Arduino (PWM)
+int Motor_E2 = 6;  // digital pin 6 of Arduino (PWM)
+
+int Motor_M1;
+int Motor_M2;
+//此兩個變數用來定義馬達正反轉的腳位，要做動態調整所以不定義初始值
+
+int motorSpeed = 0;
+//這一個變數用來控制馬達轉速(pwm電壓)
+
 //Define Variables we'll be connecting to
 double Setpoint, Input, Output;
 //Aggressive
@@ -76,7 +86,23 @@ void loop()
     }
 
     if(Input<15){    
-        Output=0;
+        Output=0; }
+
+    if (Output > 20)
+    {
+        motorSpeed = map(Output,0,127,110,255);   //則motorSpeed(馬達轉速) 以map函數以0~400的區域轉換成255~110
+        Motor_M1 = 7;                         //這兩行代表的是一個旋轉方向，數字對調就是另一個
+        Motor_M2 = 8;
+    }
+    else if (Output < -20)
+    {
+        motorSpeed = map(Output, 0, -127, 255, 110);
+        Motor_M1 = 8;                         //這兩行代表的是一個旋轉方向，數字對調就是另一個
+        Motor_M2 = 7;
+    }
+    else
+    {
+        motorSpeed = 0;
     }
 
     motores();
@@ -96,6 +122,11 @@ void loop()
 
 void motores(){
     qik.setSpeeds(Output,Output);
+    // asil add
+    digitalWrite( Motor_M1, HIGH); //數位寫入馬達正反轉
+    analogWrite( Motor_E1, motorSpeed);//類比寫入馬達轉速
+    digitalWrite( Motor_M2, LOW); //數位寫入馬達正反轉
+    analogWrite( Motor_E2, motorSpeed);//類比寫入馬達轉速
     //delay(5);
 }
 
@@ -106,3 +137,4 @@ double sensor(){
     //Serial.println(Input);
 
 }
+
