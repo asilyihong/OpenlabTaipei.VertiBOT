@@ -46,6 +46,8 @@ void SerialSend()
   Serial.print(" ");
   Serial.print(Output);   
   Serial.print(" ");
+  Serial.print(motorSpeed);   
+  Serial.print(" ");
 //  Serial.print(consKp);   
 //  Serial.print(" ");
 //  Serial.print(consKi);   

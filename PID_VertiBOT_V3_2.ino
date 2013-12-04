@@ -60,7 +60,7 @@ int buttonState = 0;
 
 void setup()
 { Serial.begin(9600);
-    Setpoint =88.5;
+    Setpoint = 97;
     qik.init();
     Wire.begin();  
     delay(1000);
@@ -88,15 +88,15 @@ void loop()
     if(Input<15){    
         Output=0; }
 
-    if (Output > 20)
+    if (Output > 0)
     {
-        motorSpeed = map(Output,0,127,110,255);   //則motorSpeed(馬達轉速) 以map函數以0~400的區域轉換成255~110
+        motorSpeed = map(Output,20,127,200,255);   //則motorSpeed(馬達轉速) 以map函數以0~400的區域轉換成255~110
         Motor_M1 = 7;                         //這兩行代表的是一個旋轉方向，數字對調就是另一個
         Motor_M2 = 8;
     }
-    else if (Output < -20)
+    else if (Output < -0)
     {
-        motorSpeed = map(Output, 0, -127, 255, 110);
+        motorSpeed = map(Output, -20, -127, 200, 255);
         Motor_M1 = 8;                         //這兩行代表的是一個旋轉方向，數字對調就是另一個
         Motor_M2 = 7;
     }
@@ -132,8 +132,8 @@ void motores(){
 
 double sensor(){
     sixDOF.getEuler(angles);
-    //    Input=abs(angles[2]);
-    Input = angles[2];
+        Input=abs(angles[2]);
+    //Input = angles[2];
     //Serial.println(Input);
 
 }
