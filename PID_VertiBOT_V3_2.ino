@@ -30,6 +30,7 @@
 int Motor_E1 = 5; // digital pin 5 of Arduino (PWM)
 int Motor_E2 = 6;  // digital pin 6 of Arduino (PWM)
 
+#define BUTTON_INPUT 2
 int Motor_M1;
 int Motor_M2;
 //此兩個變數用來定義馬達正反轉的腳位，要做動態調整所以不定義初始值
@@ -65,6 +66,17 @@ void setup()
     Wire.begin();  
     delay(1000);
     sixDOF.init(); //begin the IMU 
+    
+    Serial.println("setup 1");
+    pinMode(BUTTON_INPUT, INPUT);
+    int btnState = HIGH;
+    
+    while((btnState = digitalRead(btnState)) == HIGH) {
+        sixDOF.getEuler(angles);
+        Setpoint=abs(angles[2]);
+        Serial.print("Setpoint: ");
+        Serial.println(Setpoint);
+    }
 }
 
 void loop()
