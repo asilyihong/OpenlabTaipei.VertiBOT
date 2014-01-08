@@ -33,6 +33,7 @@
 #define MOTOR_CLOCKW  8
 #define MOTOR_CCLOCKW 7
 #define SKIP_INTERVAL 0
+#define WORK_INTERVAL 60
 #define MOTOR_MIN     159
 
 const int Motor_E1 = 5; // digital pin 5 of Arduino (PWM)
@@ -47,14 +48,15 @@ int motorSpeed = 0;
 
 // Define Variables we'll be connecting to
 double Setpoint = 90, Input = 0, Output = 0;
-double SetpointBase = 93, SetpointIvl = 3;
-int consKpBase = 7, consKpIvl = 5;
+double SetpointBase = 95, SetpointIvl = 3;
+double consKpBase = 3.8, consKpIvl = 5;
 // Aggressive
-double aggK=1, aggKp=50, aggKi=1.5, aggKd=-8; 
+double aggK=1, aggKp=50, aggKi=1.5, aggKd=-8;
 // Conservative
 // double consK=1, consKp=15, consKi=0.005, consKd=3;
 double consK=1, consKp=8, consKi=0.005, consKd=3;
 // Specify the links and initial tuning parameters
+double workMin = 0, workMax = 0;
 PID myPID(&Input, &Output, &Setpoint, consKp, consKi, consKd, DIRECT);
 //PololuQik2s9v1 qik(2, 3, 4);
 unsigned long serialTime=0; //this will help us know when to talk with processing
@@ -85,8 +87,10 @@ void setup() {
     setpointIn = analogRead(SETPOINT_INPUT);
     pidPIn = analogRead(PID_P_INPUT);
     
-    Setpoint = dMap(setpointIn, 10, 680, SetpointBase - SetpointIvl, SetpointBase + SetpointIvl);
-    consKp = map(pidPIn, 10, 680, consKpBase - consKpIvl, consKpBase + consKpIvl);
+    Setpoint = dMap(setpointIn, 0, 1023, SetpointBase - SetpointIvl, SetpointBase + SetpointIvl);
+    consKp = dMap(pidPIn, 0, 1023, consKpBase - consKpIvl, consKpBase + consKpIvl);
+    workMin = Setpoint - WORK_INTERVAL;
+    workMax = Setpoint + WORK_INTERVAL;
     
     Serial.print("setpointIn: ");
     Serial.println(setpointIn);    
@@ -123,7 +127,7 @@ void loop() {
     }
 
     myPID.Compute();
-    if (Input < 15) {    
+    if (Input < workMin || Input > workMax) {
         Output = 0; 
     }
 
