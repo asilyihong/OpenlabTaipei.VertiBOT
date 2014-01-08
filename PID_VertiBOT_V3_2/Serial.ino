@@ -82,8 +82,6 @@ void SerialReceive()
 void SerialSend()
 {
   Serial.print("PID ");
-//  Serial.print(Setpoint);   
-//  Serial.print(" ");
   Serial.print(Input);   
   Serial.print(" ");
   Serial.print(Output);   
@@ -92,14 +90,6 @@ void SerialSend()
   Serial.print(" ");
   Serial.print(gap);   
   Serial.print(" ");
-//  Serial.print(consKp);   
-//  Serial.print(" ");
-//  Serial.print(consKi);   
-//  Serial.print(" ");
-//  Serial.print(consKd);   
-//  Serial.print(" ");
-//  Serial.print("Automatic");  
-//  Serial.print(" ");
   Serial.println("Direct");
  
 }

@@ -47,6 +47,8 @@ int motorSpeed = 0;
 
 // Define Variables we'll be connecting to
 double Setpoint = 90, Input = 0, Output = 0;
+double SetpointBase = 93, SetpointIvl = 3;
+int consKpBase = 7, consKpIvl = 5;
 // Aggressive
 double aggK=1, aggKp=50, aggKi=1.5, aggKd=-8; 
 // Conservative
@@ -59,18 +61,10 @@ unsigned long serialTime=0; //this will help us know when to talk with processin
 float angles[3]; // yaw pitch roll
 // Set the FreeSixIMU object
 FreeSixIMU sixDOF = FreeSixIMU();
-float error = 0;
-int STD_LOOP_TIME = 9;   
-int lastLoopTime = STD_LOOP_TIME;
-int lastLoopUsefulTime = STD_LOOP_TIME;
-unsigned long loopStartTime = 0;
-int a = 1;
 double gap = 0;
 
 double dMap(double val, double inLow, double inHigh, double outLow, double outHigh) {
-    double oL = min(outLow, outHigh), oH = max(outLow, outHigh);
-    double iL = min(inLow, inHigh), iH = max(inLow, inHigh);
-    return (oL + (val - iL) * (oH -oL) / (iH - iL));
+    return (outLow + (val - inLow) * (outHigh - outLow) / (inHigh - inLow));
 }
 
 void setup() {
@@ -91,8 +85,8 @@ void setup() {
     setpointIn = analogRead(SETPOINT_INPUT);
     pidPIn = analogRead(PID_P_INPUT);
     
-    Setpoint = 95 + dMap(setpointIn, 20, 600, -5, 5);
-    consKp = 7 + map(pidPIn, 20, 600, -5, 5);
+    Setpoint = dMap(setpointIn, 10, 680, SetpointBase - SetpointIvl, SetpointBase + SetpointIvl);
+    consKp = map(pidPIn, 10, 680, consKpBase - consKpIvl, consKpBase + consKpIvl);
     
     Serial.print("setpointIn: ");
     Serial.println(setpointIn);    
@@ -103,6 +97,8 @@ void setup() {
     Serial.print("consKp: ");
     Serial.println(consKp);
     
+    digitalWrite(LED_OUTPUT, LOW);
+    delay(100);
     digitalWrite(LED_OUTPUT, HIGH);
     delay(100);
     digitalWrite(LED_OUTPUT, LOW);
@@ -121,11 +117,9 @@ void loop() {
     if (gap < 10) { 
         // we're close to setpoint, use conservative tuning parameters
         myPID.SetTunings(consKp, consKi, consKd);
-//        Output = updatePid(Setpoint, Input, consK, consKp, consKi, consKd);
     } else {
         // we're far from setpoint, use aggressive tuning parameters
         myPID.SetTunings(aggKp, aggKi, aggKd);
-//        Output = updatePid(Setpoint, Input, aggK, aggKp, aggKi, aggKd);
     }
 
     myPID.Compute();
@@ -134,11 +128,11 @@ void loop() {
     }
 
     if (Output > SKIP_INTERVAL) {
-        motorSpeed = map(Output, SKIP_INTERVAL, 127, MOTOR_MIN, 255);    // 則motorSpeed(馬達轉速) 以map函數以0~400的區域轉換成255~110
+        motorSpeed = map(Output, SKIP_INTERVAL, 127, MOTOR_MIN, 200);    // 則motorSpeed(馬達轉速) 以map函數以0~400的區域轉換成255~110
         Motor_M1 = MOTOR_CLOCKW;                        // 這兩行代表的是一個旋轉方向，數字對調就是另一個
         Motor_M2 = MOTOR_CCLOCKW;
     } else if (Output < -SKIP_INTERVAL) {
-        motorSpeed = map(Output, -127, -SKIP_INTERVAL, MOTOR_MIN, 255);
+        motorSpeed = map(Output, -SKIP_INTERVAL, -127, MOTOR_MIN, 200);
         Motor_M1 = MOTOR_CCLOCKW;                       // 這兩行代表的是一個旋轉方向，數字對調就是另一個
         Motor_M2 = MOTOR_CLOCKW;
     } else {
@@ -153,15 +147,8 @@ void loop() {
     analogWrite(Motor_E2, motorSpeed);  // 類比寫入馬達轉速
 
     if(millis() > serialTime) {
-//        SerialReceive();
+        SerialReceive();
         SerialSend();
         serialTime += 500;
     }
-
-    //*********************** loop timing control **************************
-    lastLoopUsefulTime = millis() - loopStartTime;
-    if(lastLoopUsefulTime < STD_LOOP_TIME)
-        delay(STD_LOOP_TIME - lastLoopUsefulTime);
-    lastLoopTime = millis() - loopStartTime;
-    loopStartTime = millis();
 } //END LOOP
